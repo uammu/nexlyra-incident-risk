@@ -1,0 +1,38 @@
+{
+  "title": "Nexlyra Incident Risk API",
+  "uid": "nexlyra-risk",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    { "id": 1, "type": "stat", "title": "Model loaded (1 = yes)", "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "risk_model_loaded" } ] },
+    { "id": 2, "type": "stat", "title": "Model load failures (1h)", "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(risk_model_load_failures_total[1h]))" } ] },
+    { "id": 3, "type": "stat", "title": "Alerts per 1,000 predictions (15m)", "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "1000 * sum(increase(risk_alerts_total[15m])) / sum(increase(risk_predictions_total[15m]))" } ] },
+    { "id": 4, "type": "stat", "title": "Unseen categories (1h)", "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(risk_unknown_category_total[1h]))" } ] },
+    { "id": 5, "type": "timeseries", "title": "Requests per second by status", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum by (status) (rate(risk_http_requests_total[1m]))", "legendFormat": "{{status}}" } ] },
+    { "id": 6, "type": "timeseries", "title": "p95 latency by route (s)", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, route) (rate(risk_http_request_seconds_bucket[5m])))", "legendFormat": "{{route}}" } ] },
+    { "id": 7, "type": "timeseries", "title": "Model inference p95 (s)", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(risk_inference_seconds_bucket[5m])))", "legendFormat": "{{kind}}" } ] },
+    { "id": 8, "type": "timeseries", "title": "Alerts per minute by level", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum by (level) (rate(risk_alerts_total[5m])) * 60", "legendFormat": "{{level}}" } ] },
+    { "id": 9, "type": "timeseries", "title": "Predicted risk: median and p95 (drift hint)", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.5, sum by (le) (rate(risk_score_bucket[15m])))", "legendFormat": "median" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(risk_score_bucket[15m])))", "legendFormat": "p95" } ] }
+  ]
+}

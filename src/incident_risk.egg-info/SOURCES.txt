@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 src/incident_risk/alert_policy.py
 src/incident_risk/boosters.py
+src/incident_risk/budget_sweep.py
 src/incident_risk/calibration.py
 src/incident_risk/calibration_compare.py
 src/incident_risk/champion.py
@@ -9,6 +10,7 @@ src/incident_risk/champion_report.py
 src/incident_risk/config.py
 src/incident_risk/cv.py
 src/incident_risk/data.py
+src/incident_risk/eda.py
 src/incident_risk/experiments.py
 src/incident_risk/explain.py
 src/incident_risk/features.py
@@ -20,7 +22,7 @@ src/incident_risk/splits.py
 src/incident_risk/subgroup.py
 src/incident_risk/train.py
 src/incident_risk/tune.py
-src/incident_risk/uncertainity.py
+src/incident_risk/uncertainty.py
 src/incident_risk.egg-info/PKG-INFO
 src/incident_risk.egg-info/SOURCES.txt
 src/incident_risk.egg-info/dependency_links.txt

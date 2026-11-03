@@ -36,3 +36,21 @@ uncertainty:
 	python -m incident_risk.uncertainty
 governance:
 	make explain robust subgroup uncertainty
+examples:
+	python scripts/make_examples.py
+dashboard-data:
+	python scripts/export_dashboard_data.py
+bench:
+	python scripts/benchmark.py --url http://localhost:8000
+up:
+	docker compose up --build -d
+down:
+	docker compose down
+smoke:
+	curl -sf localhost:8000/health && curl -sf localhost:8000/ready && curl -s -X POST localhost:8000/predict -H 'Content-Type: application/json' -d @examples/single.json
+pin-api:
+	pip freeze --exclude-editable | grep -Ei '^(scikit-learn|lightgbm|xgboost|pandas|numpy|scipy|joblib)==' > requirements-api.lock
+audit-deps:
+	pip install pip-audit && pip-audit -r requirements-api.txt
+release:
+	make register && python scripts/model_release.py archive

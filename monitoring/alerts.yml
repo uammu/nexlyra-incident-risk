@@ -1,0 +1,23 @@
+groups:
+  - name: incident-risk
+    rules:
+      - alert: ApiDown
+        expr: up{job="incident-risk-api"} == 0
+        for: 2m
+        annotations: { summary: "Risk API is not responding" }
+      - alert: ModelNotLoaded
+        expr: risk_model_loaded == 0
+        for: 5m
+        annotations: { summary: "API is up but has no verified model" }
+      - alert: High5xxRate
+        expr: sum(rate(risk_http_requests_total{status=~"5.."}[5m])) / sum(rate(risk_http_requests_total[5m])) > 0.02
+        for: 15m
+        annotations: { summary: "More than 2% of requests fail" }
+      - alert: SlowPredict
+        expr: histogram_quantile(0.95, sum by (le) (rate(risk_http_request_seconds_bucket{route="/predict"}[5m]))) > 0.2
+        for: 15m
+        annotations: { summary: "p95 latency above 200 ms" }
+      - alert: AlertBudgetBurn
+        expr: 1000 * sum(increase(risk_alerts_total[24h])) / sum(increase(risk_predictions_total[24h])) > 100
+        for: 1h
+        annotations: { summary: "Alerts per 1,000 are above 2x the budget (see rollback triggers)" }
