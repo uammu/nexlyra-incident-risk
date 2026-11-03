@@ -1,0 +1,66 @@
+seed: 42
+
+data:
+  path: data/raw/nexlyra_ml_incident_dataset_10000.csv
+  id_col: event_id
+  time_col: event_timestamp
+  time_format: ISO8601
+  target: incident_next_60m
+
+features:
+  numeric:
+    - release_age_hours
+    - requests_per_minute
+    - p95_latency_ms
+    - error_rate_pct
+    - cpu_utilization_pct
+    - memory_utilization_pct
+    - db_connections_pct
+    - queue_depth
+    - dependency_failures_15m
+    - change_failure_rate_30d
+    - active_alerts
+    - incident_history_30d
+  categorical: [service_name, environment, region, deployment_type, customer_tier]
+  percent_cols: [error_rate_pct, cpu_utilization_pct, memory_utilization_pct, db_connections_pct]
+  fraction_cols: [change_failure_rate_30d]
+
+split:
+  train_frac: 0.70
+  val_frac: 0.15
+  gap_minutes: 60
+
+alert:
+  budget_per_1000: 50
+  cost_false_alert: 1.0
+  cost_missed_incident: 20.0
+
+calibration:
+  method: sigmoid
+
+cv:
+  n_splits: 4
+  optuna_trials: 40
+  early_stopping_rounds: 50
+  es_fraction: 0.15
+
+policy:
+  l2_multiplier: 2.0
+  l3_multiplier: 3.0
+  suppression_cooldown_minutes: 60
+  page_environments: [production]
+
+api:
+  max_batch: 500
+  max_body_bytes: 2000000
+  strict_categories: false
+  require_manifest: true
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db
+  experiment: nexlyra-incident-risk
+
+paths:
+  model: models/model.joblib
+  metadata: models/metadata.json
+  reports: reports
