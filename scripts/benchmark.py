@@ -33,7 +33,7 @@ def main():
     feats = cfg["features"]["numeric"] + cfg["features"]["categorical"]
     train, _, _ = chronological_split(load_raw(cfg), cfg)  # train rows only: timing, not evaluation
     rows = json.loads(
-        train[feats].dropna().sample(1000, random_state=cfg["seed"]).to_json(orient="records")
+        train[feats].dropna().sample(3000, random_state=cfg["seed"]).to_json(orient="records")
     )
     res = {"url": a.url, "cpu_count": os.cpu_count(), "platform": platform.platform()}
 
@@ -51,15 +51,15 @@ def main():
         blat = []
         for k in range(30):
             chunk = rows[k * a.batch : (k + 1) * a.batch]
+            if not chunk:
+                print(f"batch {k}: no rows left (rows={len(rows)}), stopping")
+                break
             t0 = time.perf_counter()
-            c.post("/predict/batch?suppress=false", json={"events": chunk}).raise_for_status()
+            resp = c.post("/predict/batch?suppress=false", json={"events": chunk})
+            if resp.status_code != 200:
+                print(f"batch {k} failed: {resp.status_code} {resp.text[:600]}")
+                raise SystemExit(1)
             blat.append((time.perf_counter() - t0) * 1000)
-        res["batch"] = {
-            "batch_size": a.batch,
-            **stats(blat),
-            "ms_per_event": round(float(np.mean(blat)) / a.batch, 3),
-        }
-
     def worker(chunk):
         out = []
         with httpx.Client(base_url=a.url, timeout=30) as c:

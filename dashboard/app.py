@@ -206,14 +206,9 @@ with st.expander("Final test metrics (frozen, evaluated once)"):
     st.json(json.loads(TEST_METRICS.read_text())) if TEST_METRICS.exists() else st.write(
         "Not available yet."
     )
-with st.expander("Live API check"):
-    if st.button("Check /ready and /model-info"):
-        try:
-            st.json(
-                {
-                    "ready": httpx.get(f"{API_URL}/ready", timeout=3).json(),
-                    "model_info": httpx.get(f"{API_URL}/model-info", timeout=3).json(),
-                }
-            )
-        except Exception as e:
-            st.error(f"API not reachable at {API_URL}: {type(e).__name__}")
+with st.expander("Final test metrics (frozen, evaluated once)"):
+    final_json = ROOT / "reports/final/final_test_metrics.json"
+    if final_json.exists():
+        st.json(json.loads(final_json.read_text()))
+    else:
+        st.write("Not available yet.")

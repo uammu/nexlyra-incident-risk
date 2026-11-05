@@ -179,7 +179,8 @@ def main():
     summary["correlated_pairs_ge_0.6"] = len(pairs)
 
     # --- PDP + ICE (tasks 15, 16) ---
-    sub = hold[feats].sample(min(300, len(hold)), random_state=seed)
+    sub = hold[feats].sample(min(300, len(hold)), random_state=seed).copy()
+    sub[f["numeric"]] = sub[f["numeric"]].astype(float)
     fig, axes = plt.subplots(2, 2, figsize=(11, 8))
     PartialDependenceDisplay.from_estimator(
         base, sub, top, kind="both", subsample=100, random_state=seed, ax=axes.ravel()[: len(top)]

@@ -24,19 +24,17 @@ def main():
         raise SystemExit(f"Data validation failed: {problems}")
 
     train, val, test = chronological_split(df, cfg)
-    bounds = save_boundaries(train, val, test, cfg)
+    bounds = save_boundaries(train, val, test, cfg)  # test used for boundaries only
     print(json.dumps(bounds, indent=2))
 
     feat_cols = cfg["features"]["numeric"] + cfg["features"]["categorical"]
     X_tr, y_tr = train[feat_cols], train[d["target"]]
     X_va, y_va = val[feat_cols], val[d["target"]]
-    X_te, y_te = test[feat_cols], test[d["target"]]
 
     pos_weight = float((y_tr == 0).sum() / max((y_tr == 1).sum(), 1))
     models = build_models(cfg, pos_weight)
-    models.update(tuned_models(cfg, pos_weight))  # empty until you run the tune step
+    models.update(tuned_models(cfg, pos_weight))
 
-    # Validation split in time: first half calibrates, second half picks the threshold.
     half = len(val) // 2
     X_cal, y_cal = X_va.iloc[:half], y_va.iloc[:half]
     X_thr = X_va.iloc[half:]
@@ -64,23 +62,15 @@ def main():
                 f"{name:22s} val PR-AUC={m['pr_auc']:.4f} recall@budget={m['recall_at_budget']:.3f}"
             )
 
-    # Choose the winner on VALIDATION only (never on test).
     best = max(results, key=lambda k: results[k]["pr_auc"])
     print("Selected:", best)
 
     final = CalibratedModel(fitted[best], cfg["calibration"]["method"]).fit_calibrator(X_cal, y_cal)
     thr = threshold_for_budget(final.predict_proba(X_thr)[:, 1], budget)
 
-    # ---- Test set is touched exactly once, here ----
-    p_te = final.predict_proba(X_te)[:, 1]
-    test_metrics = evaluate(y_te, p_te, thr)
-    print("TEST:", json.dumps(test_metrics, indent=2))
-
     rep = ROOT / cfg["paths"]["reports"]
     rep.mkdir(exist_ok=True, parents=True)
     (rep / "validation_comparison.json").write_text(json.dumps(results, indent=2))
-    (rep / "test_metrics.json").write_text(json.dumps(test_metrics, indent=2))
-    test.assign(risk=p_te).to_csv(rep / "test_predictions.csv", index=False)
 
     meta = {
         "selected_model": best,
@@ -90,15 +80,12 @@ def main():
         "data_sha256": sha256_of(ROOT / d["path"]),
         "split": bounds,
         "seed": seed,
-        "test_metrics": test_metrics,
         "disclaimer": "Trained on SYNTHETIC data. Not validated for production use.",
     }
     (ROOT / "models").mkdir(exist_ok=True)
     joblib.dump({"model": final, "threshold": thr, "meta": meta}, ROOT / cfg["paths"]["model"])
     (ROOT / cfg["paths"]["metadata"]).write_text(json.dumps(meta, indent=2))
-    with mlflow.start_run(run_name="final_" + best):
-        mlflow.log_metrics({f"test_{k}": v for k, v in test_metrics.items() if np.isfinite(v)})
-        mlflow.log_artifact(str(rep / "test_metrics.json"))
+    print("Threshold frozen:", round(thr, 4), "(test set not scored here)")
 
 
 if __name__ == "__main__":

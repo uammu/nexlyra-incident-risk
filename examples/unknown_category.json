@@ -1,0 +1,20 @@
+{
+  "event_id": "NXE-000001",
+  "service_name": "brand_new_service",
+  "environment": "production",
+  "region": "ap-south-1",
+  "deployment_type": "none",
+  "customer_tier": "standard",
+  "release_age_hours": 6.3,
+  "requests_per_minute": 3911,
+  "p95_latency_ms": 55,
+  "error_rate_pct": 0.48,
+  "cpu_utilization_pct": 75.2,
+  "memory_utilization_pct": 64.21,
+  "db_connections_pct": 38.18,
+  "queue_depth": 24,
+  "dependency_failures_15m": 0,
+  "change_failure_rate_30d": 0.177,
+  "active_alerts": 6,
+  "incident_history_30d": 0
+}
