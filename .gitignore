@@ -6,4 +6,4 @@ mlflow.db
 data/raw/*.csv
 data/processed/
 reports/
-.ipynb_checkpoints/
+.ipynb_checkpoints/*.egg-info/

@@ -2,7 +2,7 @@ import hashlib
 import json
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -15,7 +15,8 @@ from api.errors import ApiError
 from incident_risk.alert_policy import Suppressor
 from incident_risk.config import ROOT
 
-RETRY_SECONDS = 10      # do not hammer the disk when the artifact is broken
+RETRY_SECONDS = 10  # do not hammer the disk when the artifact is broken
+
 
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -23,6 +24,7 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
 
 def _vocab(bundle) -> dict[str, set[str]]:
     """Category values the preprocessor saw in TRAINING (empty for non-pipeline baselines)."""
@@ -33,6 +35,7 @@ def _vocab(bundle) -> dict[str, set[str]]:
         return {c: {str(v) for v in cats} for c, cats in zip(cols, enc.categories_)}
     except Exception:
         return {}
+
 
 class ModelService:
     def __init__(self, cfg: dict):
@@ -58,7 +61,7 @@ class ModelService:
             version = "unversioned"
             if self.manifest_path.exists():
                 m = json.loads(self.manifest_path.read_text())
-                if m["model_sha256"] != sha256(self.model_path):   # verified BEFORE unpickling
+                if m["model_sha256"] != sha256(self.model_path):  # verified BEFORE unpickling
                     raise ValueError("model checksum differs from manifest")
                 version = m["version"]
             elif self.require_manifest:
@@ -68,7 +71,7 @@ class ModelService:
                 raise ValueError("feature order differs from config")
             bundle["version"] = version
             self.bundle, self.vocab, self.last_error = bundle, _vocab(bundle), None
-            self.loaded_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            self.loaded_at = datetime.now(UTC).isoformat(timespec="seconds")
             metrics.MODEL_LOADED.set(1)
             metrics.MODEL_INFO.clear()
             metrics.MODEL_INFO.labels(version, bundle["meta"]["selected_model"]).set(1)
@@ -88,16 +91,20 @@ class ModelService:
                 if self.bundle is None and time.monotonic() >= self._next_retry:
                     self.load()
         if self.bundle is None:
-            raise ApiError(503, "model_unavailable", "Model artifact is missing, corrupted or incompatible.")
+            raise ApiError(
+                503, "model_unavailable", "Model artifact is missing, corrupted or incompatible."
+            )
         return self.bundle
 
     def unknown_categories(self, rows: list[dict]) -> list[list[str]]:
-        return [[c for c in self.categorical if self.vocab.get(c) and str(r[c]) not in self.vocab[c]]
-                for r in rows]
+        return [
+            [c for c in self.categorical if self.vocab.get(c) and str(r[c]) not in self.vocab[c]]
+            for r in rows
+        ]
 
     def score(self, rows: list[dict], kind: str) -> np.ndarray:
         bundle = self.get()
-        X = pd.DataFrame(rows)[self.features]          # also drops event_id
+        X = pd.DataFrame(rows)[self.features]  # also drops event_id
         t0 = time.perf_counter()
         try:
             p = np.asarray(bundle["model"].predict_proba(X)[:, 1], dtype=float)

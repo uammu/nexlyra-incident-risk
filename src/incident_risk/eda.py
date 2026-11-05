@@ -4,7 +4,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp
 from sklearn.metrics import roc_auc_score
@@ -32,8 +31,10 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     train, _, _ = chronological_split(load_raw(cfg), cfg)
     base = float(train[t].mean())
-    notes = [f"EDA uses the TRAIN period only: {train[tc].min()} to {train[tc].max()} ({len(train):,} rows).",
-             f"Incident rate in train: {base:.4f} ({int(train[t].sum())} incidents)."]
+    notes = [
+        f"EDA uses the TRAIN period only: {train[tc].min()} to {train[tc].max()} ({len(train):,} rows).",
+        f"Incident rate in train: {base:.4f} ({int(train[t].sum())} incidents).",
+    ]
 
     # 1. target rate by month (drift in class balance)
     m = train.groupby(train[tc].dt.to_period("M"))[t].agg(rate="mean", n="size", incidents="sum")
@@ -61,7 +62,7 @@ def main():
     plt.close()
 
     # 3. distributions
-    desc = train[num].describe(percentiles=[.01, .5, .99]).T
+    desc = train[num].describe(percentiles=[0.01, 0.5, 0.99]).T
     desc["skew"] = train[num].skew()
     desc.to_csv(out / "numeric_summary.csv")
     fig, axes = plt.subplots(3, 4, figsize=(14, 8))
@@ -85,23 +86,37 @@ def main():
     plt.tight_layout()
     plt.savefig(out / "correlation.png", dpi=150)
     plt.close()
-    pairs = [(a, b, round(corr.loc[a, b], 3)) for i, a in enumerate(num) for b in num[i + 1:]
-             if abs(corr.loc[a, b]) >= 0.6]
+    pairs = [
+        (a, b, round(corr.loc[a, b], 3))
+        for i, a in enumerate(num)
+        for b in num[i + 1 :]
+        if abs(corr.loc[a, b]) >= 0.6
+    ]
     notes.append(f"Feature pairs with |Spearman| >= 0.6: {pairs if pairs else 'none'}.")
     Z = (train[num] - train[num].mean()) / train[num].std()
     Z.insert(0, "const", 1.0)
-    vif = pd.Series([variance_inflation_factor(Z.values, i) for i in range(1, Z.shape[1])], index=num)
+    vif = pd.Series(
+        [variance_inflation_factor(Z.values, i) for i in range(1, Z.shape[1])], index=num
+    )
     vif.rename("vif").to_csv(out / "vif.csv")
-    notes.append(f"Max VIF = {vif.max():.2f} ({vif.idxmax()}). Above 5 would signal multicollinearity.")
+    notes.append(
+        f"Max VIF = {vif.max():.2f} ({vif.idxmax()}). Above 5 would signal multicollinearity."
+    )
 
     # 5. outliers
     rows = []
     for c in num:
-        q1, q3 = train[c].quantile([.25, .75])
+        q1, q3 = train[c].quantile([0.25, 0.75])
         iqr = q3 - q1
         far = ((train[c] < q1 - 3 * iqr) | (train[c] > q3 + 3 * iqr)).mean()
-        rows.append({"feature": c, "share_beyond_3iqr": far, "p99": train[c].quantile(.99),
-                     "max": train[c].max()})
+        rows.append(
+            {
+                "feature": c,
+                "share_beyond_3iqr": far,
+                "p99": train[c].quantile(0.99),
+                "max": train[c].max(),
+            }
+        )
     pd.DataFrame(rows).to_csv(out / "outliers.csv", index=False)
 
     # 6. seasonality
@@ -115,28 +130,51 @@ def main():
     plt.tight_layout()
     plt.savefig(out / "seasonality.png", dpi=150)
     plt.close()
-    notes.append(f"Hourly rate range {hr.min():.3f} to {hr.max():.3f}; weekday range {dw.min():.3f} to {dw.max():.3f}.")
+    notes.append(
+        f"Hourly rate range {hr.min():.3f} to {hr.max():.3f}; weekday range {dw.min():.3f} to {dw.max():.3f}."
+    )
 
     # 7. early vs late (inside train only)
     h = len(train) // 2
     early, late = train.iloc[:h], train.iloc[h:]
-    ks = pd.DataFrame([{"feature": c, "ks_stat": ks_2samp(early[c], late[c]).statistic,
-                        "early_mean": early[c].mean(), "late_mean": late[c].mean()} for c in num])
+    ks = pd.DataFrame(
+        [
+            {
+                "feature": c,
+                "ks_stat": ks_2samp(early[c], late[c]).statistic,
+                "early_mean": early[c].mean(),
+                "late_mean": late[c].mean(),
+            }
+            for c in num
+        ]
+    )
     ks.to_csv(out / "early_vs_late.csv", index=False)
-    notes.append(f"Early vs late target rate: {early[t].mean():.3f} vs {late[t].mean():.3f}. "
-                 f"Largest KS shift: {ks.loc[ks.ks_stat.idxmax(), 'feature']} ({ks.ks_stat.max():.3f}).")
+    notes.append(
+        f"Early vs late target rate: {early[t].mean():.3f} vs {late[t].mean():.3f}. "
+        f"Largest KS shift: {ks.loc[ks.ks_stat.idxmax(), 'feature']} ({ks.ks_stat.max():.3f})."
+    )
 
     # 8. proxy-leakage screen: how well does ONE feature rank the target?
     uni = pd.Series({c: roc_auc_score(train[t], train[c]) for c in num})
-    uni = pd.DataFrame({"auc": uni, "strength": (uni - 0.5).abs() + 0.5}).sort_values("strength", ascending=False)
+    uni = pd.DataFrame({"auc": uni, "strength": (uni - 0.5).abs() + 0.5}).sort_values(
+        "strength", ascending=False
+    )
     uni.to_csv(out / "univariate_auc.csv")
     flagged = uni[uni.strength > 0.90].index.tolist()
-    notes.append("Leakage screen (single-feature ROC-AUC): "
-                 + (f"FLAG {flagged}" if flagged else "no feature above 0.90, none is a near-copy of the target")
-                 + f". Strongest: {uni.index[0]} ({uni.strength.iloc[0]:.3f}).")
+    notes.append(
+        "Leakage screen (single-feature ROC-AUC): "
+        + (
+            f"FLAG {flagged}"
+            if flagged
+            else "no feature above 0.90, none is a near-copy of the target"
+        )
+        + f". Strongest: {uni.index[0]} ({uni.strength.iloc[0]:.3f})."
+    )
     notes.append("event_id is excluded from features by the preprocessor (remainder='drop').")
 
-    (out / "eda_summary.md").write_text("# EDA summary (auto-generated)\n\n" + "\n".join(f"- {n}" for n in notes))
+    (out / "eda_summary.md").write_text(
+        "# EDA summary (auto-generated)\n\n" + "\n".join(f"- {n}" for n in notes)
+    )
     print("\n".join(notes))
     print("\nFiles in", out)
 

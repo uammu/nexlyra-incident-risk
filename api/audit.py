@@ -16,5 +16,8 @@ if not _logger.handlers:
 _logger.setLevel(logging.INFO)
 _logger.propagate = False
 
+
 def audit(**kw) -> None:
-    _logger.info(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), **kw}, default=str))
+    _logger.info(
+        json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), **kw}, default=str)
+    )

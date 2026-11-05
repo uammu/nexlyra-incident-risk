@@ -21,17 +21,27 @@ def main():
         k = max(1, round(n * budget / 1000))
         hit = int(y[order[:k]].sum())
         fp, fn = k - hit, int(y.sum()) - hit
-        rows.append({"budget_per_1000": budget, "threshold": float(p[order[k - 1]]),
-                     "recall": hit / y.sum(), "precision": hit / k,
-                     "false_alerts_per_1000": fp / n * 1000,
-                     "missed_per_1000": fn / n * 1000,
-                     "cost_per_1000": (fp * a["cost_false_alert"] + fn * a["cost_missed_incident"]) / n * 1000})
+        rows.append(
+            {
+                "budget_per_1000": budget,
+                "threshold": float(p[order[k - 1]]),
+                "recall": hit / y.sum(),
+                "precision": hit / k,
+                "false_alerts_per_1000": fp / n * 1000,
+                "missed_per_1000": fn / n * 1000,
+                "cost_per_1000": (fp * a["cost_false_alert"] + fn * a["cost_missed_incident"])
+                / n
+                * 1000,
+            }
+        )
     df = pd.DataFrame(rows)
     df.to_csv(ROOT / cfg["paths"]["reports"] / "budget_sweep.csv", index=False)
     print(df.round(3).to_string(index=False))
     best = df.loc[df.cost_per_1000.idxmin()]
-    print(f"\nLowest expected cost on validation: budget {int(best.budget_per_1000)} per 1,000 "
-          f"(recall {best.recall:.2f}, precision {best.precision:.2f}).")
+    print(
+        f"\nLowest expected cost on validation: budget {int(best.budget_per_1000)} per 1,000 "
+        f"(recall {best.recall:.2f}, precision {best.precision:.2f})."
+    )
 
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.plot(df.budget_per_1000, df.recall, marker="o", label="recall")

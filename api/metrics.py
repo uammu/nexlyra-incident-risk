@@ -1,14 +1,24 @@
 from prometheus_client import Counter, Gauge, Histogram
 
-
 REQUESTS = Counter("risk_http_requests_total", "HTTP requests", ["route", "method", "status"])
-HTTP_SECONDS = Histogram("risk_http_request_seconds", "HTTP latency", ["route"],
-                         buckets=(.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5))
-INFER_SECONDS = Histogram("risk_inference_seconds", "Model scoring time per call", ["kind"],
-                          buckets=(.0005, .001, .0025, .005, .01, .025, .05, .1, .25, .5, 1))
+HTTP_SECONDS = Histogram(
+    "risk_http_request_seconds",
+    "HTTP latency",
+    ["route"],
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5),
+)
+INFER_SECONDS = Histogram(
+    "risk_inference_seconds",
+    "Model scoring time per call",
+    ["kind"],
+    buckets=(0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1),
+)
 PREDICTIONS = Counter("risk_predictions_total", "Events scored")
-SCORES = Histogram("risk_score", "Predicted risk probability",
-                   buckets=(.01, .02, .05, .1, .2, .3, .4, .6, .8, 1.0))
+SCORES = Histogram(
+    "risk_score",
+    "Predicted risk probability",
+    buckets=(0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0),
+)
 ALERTS = Counter("risk_alerts_total", "Alerts raised", ["level"])
 SUPPRESSED = Counter("risk_alerts_suppressed_total", "Alerts muted by cooldown")
 UNKNOWN_CAT = Counter("risk_unknown_category_total", "Unseen category values", ["feature"])

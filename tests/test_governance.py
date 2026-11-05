@@ -1,11 +1,15 @@
 import pytest
+
 from incident_risk.alert_policy import Suppressor, alert_level
 from incident_risk.champion import load_champion, verify_feature_order
 from incident_risk.config import ROOT, load_config
 
 POL = {"l2_multiplier": 2.0, "l3_multiplier": 3.0, "page_environments": ["production"]}
-needs_model = pytest.mark.skipif(not (ROOT / load_config()["paths"]["model"]).exists(),
-                                 reason="run make train first")
+needs_model = pytest.mark.skipif(
+    not (ROOT / load_config()["paths"]["model"]).exists(), reason="run make train first"
+)
+
+
 def test_empty_input_rejected():
     assert client.post("/predict", json={}).status_code == 422
     assert client.post("/predict").status_code == 422

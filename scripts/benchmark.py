@@ -12,9 +12,15 @@ from incident_risk.config import ROOT, load_config
 from incident_risk.data import load_raw
 from incident_risk.splits import chronological_split
 
+
 def stats(ms):
-    return {"p50_ms": round(float(np.percentile(ms, 50)), 2), "p95_ms": round(float(np.percentile(ms, 95)), 2),
-            "p99_ms": round(float(np.percentile(ms, 99)), 2), "mean_ms": round(float(np.mean(ms)), 2)}
+    return {
+        "p50_ms": round(float(np.percentile(ms, 50)), 2),
+        "p95_ms": round(float(np.percentile(ms, 95)), 2),
+        "p99_ms": round(float(np.percentile(ms, 99)), 2),
+        "mean_ms": round(float(np.mean(ms)), 2),
+    }
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -25,13 +31,15 @@ def main():
     a = ap.parse_args()
     cfg = load_config()
     feats = cfg["features"]["numeric"] + cfg["features"]["categorical"]
-    train, _, _ = chronological_split(load_raw(cfg), cfg)          # train rows only: timing, not evaluation
-    rows = json.loads(train[feats].dropna().sample(1000, random_state=cfg["seed"]).to_json(orient="records"))
+    train, _, _ = chronological_split(load_raw(cfg), cfg)  # train rows only: timing, not evaluation
+    rows = json.loads(
+        train[feats].dropna().sample(1000, random_state=cfg["seed"]).to_json(orient="records")
+    )
     res = {"url": a.url, "cpu_count": os.cpu_count(), "platform": platform.platform()}
 
     with httpx.Client(base_url=a.url, timeout=30) as c:
         c.get("/ready").raise_for_status()
-        for r in rows[:30]:                                         # warm-up, not measured
+        for r in rows[:30]:  # warm-up, not measured
             c.post("/predict", json=r)
         lat = []
         for r in rows[: a.n]:
@@ -42,12 +50,15 @@ def main():
 
         blat = []
         for k in range(30):
-            chunk = rows[k * a.batch:(k + 1) * a.batch]
+            chunk = rows[k * a.batch : (k + 1) * a.batch]
             t0 = time.perf_counter()
             c.post("/predict/batch?suppress=false", json={"events": chunk}).raise_for_status()
             blat.append((time.perf_counter() - t0) * 1000)
-        res["batch"] = {"batch_size": a.batch, **stats(blat),
-                        "ms_per_event": round(float(np.mean(blat)) / a.batch, 3)}
+        res["batch"] = {
+            "batch_size": a.batch,
+            **stats(blat),
+            "ms_per_event": round(float(np.mean(blat)) / a.batch, 3),
+        }
 
     def worker(chunk):
         out = []
@@ -65,11 +76,17 @@ def main():
         with ThreadPoolExecutor(k) as ex:
             done = [x for part in ex.map(worker, chunks) for x in part]
         wall = time.perf_counter() - t0
-        res["concurrency"].append({"clients": k, "requests_per_sec": round(len(done) / wall, 1),
-                                   "errors": sum(code != 200 for code, _ in done),
-                                   **stats([ms for _, ms in done])})
+        res["concurrency"].append(
+            {
+                "clients": k,
+                "requests_per_sec": round(len(done) / wall, 1),
+                "errors": sum(code != 200 for code, _ in done),
+                **stats([ms for _, ms in done]),
+            }
+        )
     (ROOT / cfg["paths"]["reports"] / "benchmark.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
+
 
 if __name__ == "__main__":
     main()
