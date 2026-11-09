@@ -60,6 +60,7 @@ def main():
                 print(f"batch {k} failed: {resp.status_code} {resp.text[:600]}")
                 raise SystemExit(1)
             blat.append((time.perf_counter() - t0) * 1000)
+
     def worker(chunk):
         out = []
         with httpx.Client(base_url=a.url, timeout=30) as c:
