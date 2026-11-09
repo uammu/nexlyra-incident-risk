@@ -3,6 +3,10 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 NonNeg = Annotated[float, Field(ge=0, le=1e9, allow_inf_nan=False)]
+Hours = Annotated[float, Field(ge=0, le=10_000, allow_inf_nan=False)]
+Rpm = Annotated[float, Field(ge=0, le=1_000_000, allow_inf_nan=False)]
+LatMs = Annotated[float, Field(ge=0, le=60_000, allow_inf_nan=False)]
+Count = Annotated[float, Field(ge=0, le=10_000, allow_inf_nan=False)]
 Pct = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
 Frac = Annotated[float, Field(ge=0, le=1, allow_inf_nan=False)]
 Cat = Annotated[
@@ -43,18 +47,18 @@ class EventIn(BaseModel):
     region: Cat
     deployment_type: Cat
     customer_tier: Cat
-    release_age_hours: NonNeg
-    requests_per_minute: NonNeg
-    p95_latency_ms: NonNeg
+    release_age_hours: Hours
+    requests_per_minute: Rpm
+    p95_latency_ms: LatMs
     error_rate_pct: Pct
     cpu_utilization_pct: Pct
     memory_utilization_pct: Pct
     db_connections_pct: Pct
-    queue_depth: NonNeg
-    dependency_failures_15m: NonNeg
+    queue_depth: Count
+    dependency_failures_15m: Count
     change_failure_rate_30d: Frac
-    active_alerts: NonNeg
-    incident_history_30d: NonNeg
+    active_alerts: Count
+    incident_history_30d: Count
 
 
 class BatchIn(BaseModel):

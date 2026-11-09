@@ -196,3 +196,8 @@ def test_metrics_exposed(api_client, good_payload):
         "risk_model_loaded 1.0",
     ]:
         assert name in text
+
+
+def test_absurd_value_rejected(api_client, good_payload):
+    r = api_client.post("/predict", json={**good_payload, "queue_depth": 1_000_000})
+    assert r.status_code == 422
