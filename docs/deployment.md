@@ -1,4 +1,19 @@
 # Deployment, Throughput and Rollback
+## Measured throughput (Docker Desktop on Windows, 16 CPUs, localhost, single worker)
+| Scenario | p50 | p95 | Requests/s |
+|---|---|---|---|
+| Single client | 56.5 ms | 65.3 ms | 17 |
+| 4 clients | 76 ms | 87.6 ms | 54 |
+| 8 clients | 63 ms | 89.4 ms | 110 |
+| 16 clients | 126 ms | 183 ms | 100 |
+
+| Batch size | p50 | ms per event |
+|---|---|---|
+| 10 | 51.5 ms | 5.2 |
+| 100 | 55.2 ms | 0.56 |
+| 500 | 70.0 ms | 0.12 |
+
+Latency is mostly fixed per-request overhead, so batching is far cheaper per event. A local (non-Docker) run measured 11 to 25 ms single-client; results vary with machine load, so conditions are stated.
 
 ## Run
 `make up` starts api (8000), dashboard (8501), prometheus (9090), grafana (3000, set GRAFANA_PASSWORD).
