@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    image: nexlyra-incident-risk-api:${IMAGE_TAG:-dev}
+    image: nexlyra-incident-risk-api:dev
     ports: ["8000:8000"]
     volumes:
       - ./models:/app/models:ro
@@ -32,7 +32,7 @@ services:
     image: grafana/grafana:11.1.0
     ports: ["3000:3000"]
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-change-me}
+      GF_SECURITY_ADMIN_PASSWORD: change-me
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
