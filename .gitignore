@@ -8,3 +8,5 @@ data/processed/
 reports/
 .ipynb_checkpoints/*.egg-info/
 *.egg-info/
+logs/
+logs/
