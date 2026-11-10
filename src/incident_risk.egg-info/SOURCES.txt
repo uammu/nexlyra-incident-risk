@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/incident_risk/alert_policy.py
+src/incident_risk/baseline_report.py
 src/incident_risk/boosters.py
 src/incident_risk/budget_sweep.py
 src/incident_risk/calibration.py
@@ -14,10 +15,13 @@ src/incident_risk/eda.py
 src/incident_risk/experiments.py
 src/incident_risk/explain.py
 src/incident_risk/features.py
+src/incident_risk/final_evaluation.py
 src/incident_risk/metrics.py
 src/incident_risk/models.py
+src/incident_risk/monitoring.py
 src/incident_risk/register.py
 src/incident_risk/robustness.py
+src/incident_risk/service_hash.py
 src/incident_risk/splits.py
 src/incident_risk/subgroup.py
 src/incident_risk/train.py
@@ -31,5 +35,6 @@ tests/test_api.py
 tests/test_cv.py
 tests/test_features.py
 tests/test_governance.py
+tests/test_isolation.py
 tests/test_metrics.py
 tests/test_splits.py
