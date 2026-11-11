@@ -15,14 +15,16 @@
 | 42 | Done | docs/evidence/pip_audit.txt |
 | 43-44 | Done | docker compose ps; /ready from the container |
 | 45 | Not run | change to Done after the dashboard screenshot |
-| 46 | Not run | change to Done after the fresh-folder run |
+| 46 | Partial | change to Done after the fresh-folder run |
 | 47-48 | Done | README.md; docs/model_card.md |
 | 49 | Not run | change to Done after recording the demo |
 | 50-51 | Done | docs/executive_summary.md; docs/handover_checklist.md |
 | 52-53 | Done | repository; these reports |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- `train.py` scored the test set on earlier runs (disclosed in docs/model_card.md); the formal single evaluation is reports/final/FINAL_TEST_LOCK.json.
+- Evidently is incompatible with pandas 3.1; PSI and KS reports used instead.
+- Clean-install check (task 46) was blocked by a venv permission error; training was reproduced in the working folder with identical metrics.
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md

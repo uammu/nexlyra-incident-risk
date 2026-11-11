@@ -15,7 +15,8 @@
 | 52 | Done | this report |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- Champion is logistic regression, so SHAP uses the linear explainer.
+- PDP needed float columns. SHAP and permutation importance disagree on context features.
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md

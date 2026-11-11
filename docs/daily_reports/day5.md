@@ -17,7 +17,9 @@
 | 52 | Done | docs/demo_script.md; this report |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- `curl` and `findstr` were unavailable; Python was used instead.
+- Benchmark sampled too few rows for batches (fixed).
+- `docker-compose.yml` was emptied by a commit and restored from git.
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md

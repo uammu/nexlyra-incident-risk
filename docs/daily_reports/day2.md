@@ -12,7 +12,8 @@
 | 50-52 | Done | reports/baselines/baseline_table.csv; this report |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- pandas 3.1 and scikit-learn 1.9 needed a fix: `RuleBaseline` mixin order.
+- `majority_class` recall at budget is meaningless (all scores equal).
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md

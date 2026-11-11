@@ -16,7 +16,8 @@
 | 50-52 | Done | validate_data.py; docs/eda_report.md; this report |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- Dataset timestamps are ISO format; the loader needed `time_format: ISO8601`.
+- `p95_latency_ms` was flagged by the leakage screen (AUC 0.903) and reviewed in docs/eda_report.md.
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md

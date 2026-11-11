@@ -14,7 +14,8 @@
 | 51-52 | Done | README run order; this report |
 
 ## Blockers and notes
-- (write what actually blocked you)
+- MLflow 3 needed `serialization_format=cloudpickle` for the custom calibrated model.
+- Logistic regression beat tuned boosters; sigmoid kept over isotonic.
 
 ## Reproduce
 `python -m pytest -q` and the commands in README.md
