@@ -16,7 +16,7 @@
 Latency is mostly fixed per-request overhead, so batching is far cheaper per event. A local (non-Docker) run measured 11 to 25 ms single-client; results vary with machine load, so conditions are stated.
 
 ## Run
-`make up` starts api (8000), dashboard (8501), prometheus (9090), grafana (3000, set GRAFANA_PASSWORD).
+`make up` starts api (8000), dashboard (8501), prometheus (9090), grafana (13000, mapped from container port 3000 because 3000 is blocked on some Windows machines; password admin / change-me).
 The model is mounted read-only from ./models, never baked into the image.
 Check: `make smoke`. Image tag: `IMAGE_TAG=$(git rev-parse --short HEAD) make up`.
 

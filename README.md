@@ -35,7 +35,7 @@ python -m incident_risk.final_evaluation      :: run ONCE; locks itself
 python tasks.py governance                    :: SHAP, robustness, subgroups, uncertainty
 python -m incident_risk.monitoring
 python scripts\export_dashboard_data.py
-docker compose up --build -d                  :: API 8000, dashboard 8501, Prometheus 9090, Grafana 3000
+docker compose up --build -d                  :: API 8000, dashboard 8501, Prometheus 9090, Grafana 13000 (admin / change-me)
 ```
 Without Docker: `python tasks.py api` and `python tasks.py dash`.
 
